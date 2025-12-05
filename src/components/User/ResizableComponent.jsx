@@ -129,7 +129,7 @@ export const ResizableComponent = ({
   defaultWidth = 275,
   minWidth = 200,
   maxWidth = 1200,
-  onClose,
+  extraStyles = {},
 }) => {
   const [width, setWidth] = useState(defaultWidth);
   const [isResizing, setIsResizing] = useState(false);
@@ -186,11 +186,12 @@ export const ResizableComponent = ({
         width: `${width}px`,
         position: "fixed",
         height: "100%",
-        border: "1px solid black",
+        border: "1px solid #cdcdcd",
         background: "#fff",
         zIndex: 999,
         right: 0,
-        top: "80px",
+        top: "90px",
+        ...extraStyles,
       }}
     >
       <div style={{ height: "100%", paddingRight: "8px" }}>{children}</div>
@@ -201,11 +202,11 @@ export const ResizableComponent = ({
           position: "absolute",
           right: 0,
           top: 0,
-          height: "20%",
+          height: "10%",
           width: "8px",
           cursor: "col-resize",
           zIndex: 10,
-          background: isResizing ? "rgba(0, 123, 255, 0.3)" : "transparent",
+          background: "transparent",
         }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleDoubleClick}

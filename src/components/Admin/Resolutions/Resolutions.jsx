@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../../CommonComponent/Navbar/Navbar";
-import {
-  AddCategory,
-  ListCategories,
-  AddIssue,
-  AddSteps,
-  GetAllResolutionList,
-} from "../AdminServices/AdminServices";
+import { GetAllResolutionList } from "../AdminServices/AdminServices";
 
 import Loading from "../../CommonComponent/Loading/Loading";
 import Sidebar from "../../CommonComponent/SideBar/SideBar";

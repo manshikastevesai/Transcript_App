@@ -8,7 +8,7 @@ import Loading from "../../CommonComponent/Loading/Loading";
 import { ResizableComponent } from "../../User/ResizableComponent";
 import { Header } from "../../User/UserDashboard/Header";
 import { useAppContext } from "../../Context/AppContext";
-import { GetChatHistory } from "../AdminServices/AdminServices";
+
 import { toast } from "react-toastify";
 
 const AdminChatBot = () => {
@@ -20,6 +20,11 @@ const AdminChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingBotSideBar, setLoadingBotSideBar] = useState(false);
   const { user } = useAppContext();
+  const [mainChatInput, setMainChatInput] = useState("");
+  const [sideChatInput, setSideChatInput] = useState("");
+
+  const [mainChatMessages, setMainChatMessages] = useState([]);
+  const [sideChatMessages, setSideChatMessages] = useState([]);
 
   const [chatMessages, setChatMessages] = useState([
     {
@@ -37,10 +42,54 @@ const AdminChatBot = () => {
     setIsOpen(!isOpen);
   };
 
+  // const handleChatBotOne = async () => {
+  //   const message = chatInput.trim();
+  //   if (!message) return;
+  //   setChatInput("");
+  //   const userMsg = {
+  //     sender: "user",
+  //     text: message,
+  //     timestamp: new Date().toLocaleTimeString([], {
+  //       hour: "2-digit",
+  //       minute: "2-digit",
+  //     }),
+  //   };
+  //   setChatMessages((prev) => [...prev, userMsg]);
+  //   setLoadingBotSideBar(true);
+  //   try {
+  //     const res = await ChatWithBot(message);
+  //     const botMsg = {
+  //       sender: "bot",
+  //       text: res.answer,
+  //       timestamp: new Date().toLocaleTimeString([], {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //       }),
+  //     };
+  //     setChatMessages((prev) => [...prev, botMsg]);
+  //   } catch (err) {
+  //     setChatMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         sender: "bot",
+  //         text: "Failed to get response.",
+  //         timestamp: new Date().toLocaleTimeString([], {
+  //           hour: "2-digit",
+  //           minute: "2-digit",
+  //         }),
+  //       },
+  //     ]);
+  //   } finally {
+  //     setLoadingBotSideBar(false);
+  //   }
+  // };
+
   const handleChatBotOne = async () => {
-    const message = chatInput.trim();
+    const message = sideChatInput.trim();
     if (!message) return;
-    setChatInput("");
+
+    setSideChatInput("");
+
     const userMsg = {
       sender: "user",
       text: message,
@@ -49,8 +98,9 @@ const AdminChatBot = () => {
         minute: "2-digit",
       }),
     };
-    setChatMessages((prev) => [...prev, userMsg]);
-    setLoadingBotSideBar(true);
+
+    setSideChatMessages((prev) => [...prev, userMsg]);
+
     try {
       const res = await ChatWithBot(message);
       const botMsg = {
@@ -78,29 +128,77 @@ const AdminChatBot = () => {
       setLoadingBotSideBar(false);
     }
   };
+
   useEffect(() => {
     if (chatWindowRef.current) {
       chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
     }
   }, [chatMessages]);
 
-  const showHistory = async (user_id) => {
-    setIsLoading(true);
-    try {
-      const response = GetChatHistory(user_id);
-      if (response) {
-      }
-    } catch (error) {
-      toast.error(err || "Couldn't fetch old conversation");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const showHistory = async (user_id) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = GetChatHistory(user_id);
+  //     if (response) {
+  //     }
+  //   } catch (error) {
+  //     toast.error(err || "Couldn't fetch old conversation");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleChatSend = async () => {
+  //   const message = chatInput.trim();
+  //   if (!message) return;
+  //   setChatInput("");
+  //   const userMsg = {
+  //     sender: "user",
+  //     text: message,
+  //     timestamp: new Date().toLocaleTimeString([], {
+  //       hour: "2-digit",
+  //       minute: "2-digit",
+  //     }),
+  //   };
+
+  //   setChatMessages((prev) => [...prev, userMsg]);
+  //   setChatLoading(true);
+  //   try {
+  //     // const res = await AdminChatWithFile(payload);
+
+  //     const botMsg = {
+  //       sender: "bot",
+  //       text: res.answer,
+  //       timestamp: new Date().toLocaleTimeString([], {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //       }),
+  //     };
+
+  //     setChatMessages((prev) => [...prev, botMsg]);
+  //   } catch (e) {
+  //     setChatMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         sender: "bot",
+  //         text: "Failed to get response.",
+  //         timestamp: new Date().toLocaleTimeString([], {
+  //           hour: "2-digit",
+  //           minute: "2-digit",
+  //         }),
+  //       },
+  //     ]);
+  //   } finally {
+  //     setChatLoading(false);
+  //   }
+  // };
 
   const handleChatSend = async () => {
-    const message = chatInput.trim();
+    const message = mainChatInput.trim();
     if (!message) return;
-    setChatInput("");
+
+    setMainChatInput("");
+
     const userMsg = {
       sender: "user",
       text: message,
@@ -110,10 +208,10 @@ const AdminChatBot = () => {
       }),
     };
 
-    setChatMessages((prev) => [...prev, userMsg]);
-    setChatLoading(true);
+    setMainChatMessages((prev) => [...prev, userMsg]);
+
     try {
-      // const res = await AdminChatWithFile(payload);
+      const res = await AdminChatWithFile(payload);
 
       const botMsg = {
         sender: "bot",
@@ -141,6 +239,7 @@ const AdminChatBot = () => {
       setChatLoading(false);
     }
   };
+
   const WhatsAppBubble = ({ msg }) => (
     <div
       className={`userdashboard-bubble ${
@@ -192,7 +291,10 @@ const AdminChatBot = () => {
           </h3>
 
           <div className="adminchatbot-2" ref={chatWindowRef}>
-            {chatMessages.map((msg, idx) => (
+            {/* {chatMessages.map((msg, idx) => (
+              <Bubble msg={msg} key={idx} />
+            ))} */}
+            {mainChatMessages.map((msg, idx) => (
               <Bubble msg={msg} key={idx} />
             ))}
 
@@ -211,8 +313,12 @@ const AdminChatBot = () => {
             <input
               type="text"
               placeholder="Type a message..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
+              // value={chatInput}
+              // onChange={(e) => setChatInput(e.target.value)}
+              // onKeyDown={(e) => e.key === "Enter" && handleChatSend()}
+
+              value={mainChatInput}
+              onChange={(e) => setMainChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleChatSend()}
               style={{
                 flex: 1,
@@ -238,91 +344,93 @@ const AdminChatBot = () => {
       <div className="back" id="toggleSidebar" onClick={handleResizableChange}>
         {sidebarHidden ? <FaChevronRight /> : <FaChevronLeft />}
       </div>
-      {resizableChange && (
-        <ResizableComponent>
-          <div>
-            <div className="sidebar " id="sidebar">
-              <div>
-                <h3 style={{ paddingTop: "26px", fontSize: "24px" }}>
-                  Control Panel
-                </h3>
-                <div className="chatbot-container">
-                  <h3 style={{ fontSize: "18px" }} className="mb-0">
-                    Assistant Chat
+      <div className="resizable-comp">
+        {resizableChange && (
+          <ResizableComponent>
+            <div>
+              <div className="sidebar " id="sidebar">
+                <div>
+                  <h3 style={{ paddingTop: "26px", fontSize: "24px" }}>
+                    Control Panel
                   </h3>
-                  <br />
-                  <div>
-                    <Header />
-                    <div className="chat-window-ref" ref={chatWindowRef}>
-                      {chatMessages.map((msg, idx) => (
-                        <WhatsAppBubble msg={msg} key={idx} />
-                      ))}
-                      {loadingBotSideBar && (
-                        <div className="userdashboard-bubble userdashboard-bubble-bot">
-                          <div className="bot-loading">
-                            <span className="dot"></span>
-                            <span className="dot"></span>
-                            <span className="dot"></span>
+                  <div className="chatbot-container">
+                    <h3 style={{ fontSize: "18px" }} className="mb-0">
+                      Assistant Chat
+                    </h3>
+                    <br />
+                    <div>
+                      <Header />
+                      <div className="chat-window-ref" ref={chatWindowRef}>
+                        {/* {chatMessages.map((msg, idx) => (
+                          <WhatsAppBubble msg={msg} key={idx} />
+                        ))} */}
+                        {sideChatMessages.map((msg, idx) => (
+                          <WhatsAppBubble msg={msg} key={idx} />
+                        ))}
+
+                        {loadingBotSideBar && (
+                          <div className="userdashboard-bubble userdashboard-bubble-bot">
+                            <div className="bot-loading">
+                              <span className="dot"></span>
+                              <span className="dot"></span>
+                              <span className="dot"></span>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      background: "#fff",
-
-                      borderRadius: "10px",
-                    }}
-                  >
-                    <input
-                      type="text"
-                      placeholder="Type a message..."
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleChatBotOne();
-                        }
-                      }}
+                    <div
                       style={{
-                        flex: 1,
-                        padding: "10px 14px",
-                        background: "#fff",
-                        borderRadius: "25px",
-                        border: "1px solid rgb(191 180 180)",
-                      }}
-                    />
-
-                    <button
-                      onClick={handleChatBotOne}
-                      disabled={loadingBotSideBar}
-                      style={{
-                        width: "auto",
-                        borderRadius: "50%",
-                        background: loadingBotSideBar
-                          ? "rgba(2, 9, 53, 0.4)"
-                          : "rgb(2, 9, 53)",
-                        border: "none",
                         display: "flex",
-                        justifyContent: "center",
                         alignItems: "center",
-                        cursor: loadingBotSideBar ? "not-allowed" : "pointer",
+                        gap: "8px",
+                        background: "#fff",
+                        borderRadius: "10px",
                       }}
                     >
-                      <IoMdSend />
-                    </button>
+                      <input
+                        type="text"
+                        placeholder="Type a message..."
+                        value={sideChatInput}
+                        onChange={(e) => setSideChatInput(e.target.value)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleChatBotOne()
+                        }
+                        style={{
+                          flex: 1,
+                          padding: "10px 14px",
+                          background: "#fff",
+                          borderRadius: "25px",
+                          border: "1px solid rgb(191 180 180)",
+                        }}
+                      />
+
+                      <button
+                        onClick={handleChatBotOne}
+                        disabled={loadingBotSideBar}
+                        style={{
+                          width: "auto",
+                          borderRadius: "50%",
+                          background: loadingBotSideBar
+                            ? "rgba(2, 9, 53, 0.4)"
+                            : "rgb(2, 9, 53)",
+                          border: "none",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          cursor: loadingBotSideBar ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        <IoMdSend />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </ResizableComponent>
-      )}
+          </ResizableComponent>
+        )}
+      </div>
     </div>
   );
 };

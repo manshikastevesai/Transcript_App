@@ -147,7 +147,7 @@ export const ShowAllHistoryOfUsers = async () => {
   return res.data;
 };
 
-export const GetChatHistory = async (user_id) => {
-  const res = await axiosInstance.get(`/chat/historys/${user_id}`);
-  return res.data;
-};
+// export const GetChatHistory = async (user_id) => {
+//   const res = await axiosInstance.get(`/chat/historys/${user_id}`);
+//   return res.data;
+// };

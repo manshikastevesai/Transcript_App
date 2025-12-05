@@ -47,7 +47,7 @@ const Sidebar = ({ isOpen }) => {
       setOpenFileId(null);
     } else {
       setOpenUser(username);
-      setActiveTab("customerDetails"); // fixed
+      setActiveTab("customerDetails");
       setOpenFileId(null);
     }
   };
@@ -65,7 +65,6 @@ const Sidebar = ({ isOpen }) => {
         overflowY: "auto",
       }}
     >
-      {/* SuperAdmin */}
       {user?.role === "SuperAdmin" && (
         <div className="list-group list-group-flush">
           <Link
@@ -79,7 +78,6 @@ const Sidebar = ({ isOpen }) => {
         </div>
       )}
 
-      {/* Admin */}
       {user?.role === "admin" && (
         <>
           <div className="list-group list-group-flush">
@@ -104,7 +102,6 @@ const Sidebar = ({ isOpen }) => {
             </Link>
           </div>
 
-          {/* HISTORY */}
           <div className="list-group list-group-flush">
             <div
               className="list-group-item list-group-item-action p-3 d-flex justify-content-between align-items-center"
@@ -125,7 +122,6 @@ const Sidebar = ({ isOpen }) => {
               <div className="ps-3">
                 {Object.keys(usersData).map((username) => (
                   <div key={username} className="mt-3">
-                    {/* Username */}
                     <div
                       onClick={() => toggleUser(username)}
                       className="d-flex justify-content-between align-items-center py-2 px-2 rounded bg-light"
@@ -148,10 +144,8 @@ const Sidebar = ({ isOpen }) => {
                       ></i>
                     </div>
 
-                    {/* USER CONTENT */}
                     {openUser === username && (
                       <div className="mt-2">
-                        {/* Customer Details */}
                         <div
                           onClick={() =>
                             setActiveTab((prev) =>
@@ -201,7 +195,6 @@ const Sidebar = ({ isOpen }) => {
                                 ].customer_details.services.join(", ")}
                               </p>
 
-                              {/* TRANSACTIONS */}
                               <div
                                 onClick={() =>
                                   setOpenTransactions((prev) =>
@@ -265,7 +258,6 @@ const Sidebar = ({ isOpen }) => {
                                   )
                                 )}
 
-                              {/* ISSUES */}
                               <div
                                 onClick={() =>
                                   setOpenIssues((prev) =>
@@ -316,7 +308,6 @@ const Sidebar = ({ isOpen }) => {
                                   )
                                 )}
 
-                              {/* RESTRICTIONS */}
                               <div
                                 onClick={() =>
                                   setOpenRestrictions((prev) =>
@@ -407,7 +398,6 @@ const Sidebar = ({ isOpen }) => {
                           </div>
                         )}
 
-                        {/* FILES */}
                         <div
                           onClick={() =>
                             setActiveTab((prev) =>
@@ -505,7 +495,6 @@ const Sidebar = ({ isOpen }) => {
         </>
       )}
 
-      {/* Logout */}
       <div className="list-group list-group-flush mt-3">
         <Link
           to="#"

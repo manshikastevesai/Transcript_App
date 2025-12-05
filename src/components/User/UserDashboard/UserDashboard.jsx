@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -10,7 +9,6 @@ import {
   FaBars,
   FaRobot,
 } from "react-icons/fa";
-
 import { IoMdSend } from "react-icons/io";
 import { useAppContext } from "../../Context/AppContext";
 import {
@@ -18,25 +16,17 @@ import {
   ChatWithBot,
   ChatWithFile,
   ShowAllHistory,
-  ShowFiles,
-  userChatHistory,
 } from "../UserServices/UserServices";
-
 import { ResizableComponent } from "../ResizableComponent";
 import { Header } from "./Header";
 import { toast } from "react-toastify";
 import Loading from "../../CommonComponent/Loading/Loading";
-
 const UserDashboard = () => {
-  const ws = useRef(null);
-  const [messages, setMessages] = useState([]);
-
   const [customerLoaded, setCustomerLoaded] = useState(false);
   const [sidebarHidden, setSidebarHidden] = useState(false);
   const [resizableChange, setResizableChange] = useState(true);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const { user, handleLogout } = useAppContext();
-
   const navigate = useNavigate();
   const [FileItem, setFileItem] = useState([]);
   const [selected, setSelected] = useState("");
@@ -46,7 +36,12 @@ const UserDashboard = () => {
   const [loadingBotSideBar, setLoadingBotSideBar] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [staticData, setstaticData] = useState(null);
+  console.log(staticData, "staticData");
+
   const [historyData, setHistoryData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [customerData, setCustomerData] = useState(null);
 
   const [chatMessages, setChatMessages] = useState([
     {
@@ -105,7 +100,9 @@ const UserDashboard = () => {
   const loadFiles = async () => {
     setIsLoading(true);
     try {
-      const [res, data] = await Promise.all([ShowAllHistory(), ShowFiles()]);
+      const [res, data] = await Promise.all([ShowAllHistory()]);
+      console.log(res, "data1111");
+
       setFileItem(data?.files || []);
       setstaticData(res || {});
       setHistoryData(res?.chat_history || []);
@@ -116,9 +113,7 @@ const UserDashboard = () => {
       setIsLoading(false);
     }
   };
-
   const toggleSidebar = () => setSidebarHidden((prev) => !prev);
-
   const handleResizableChange = () => {
     setResizableChange((prev) => !prev);
     setSidebarHidden((prev) => !prev);
@@ -168,13 +163,7 @@ const UserDashboard = () => {
 
   const handleChatBotTwo = async () => {
     const message = chatInput2.trim();
-
-    if (!selected) {
-      setFileError(true);
-      return;
-    }
     if (!message) return;
-
     setChatInput2("");
     setFileError(false);
 
@@ -182,34 +171,32 @@ const UserDashboard = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-
-    // 1. Add user message to UI
     const userMsg = {
       sender: "user",
       text: message,
       timestamp,
     };
-
     setChatMessages2((prev) => [...prev, userMsg]);
-
-    // 2. Show loading until bot responds
     setLoadingBot(true);
-
-    // 3. Send through WebSocket instead of API
     const payload = {
       sender: "user",
       file_id: selected,
       question: message,
       timestamp,
     };
-
     try {
-      // send message to backend over WebSocket
-      ws.current.send(JSON.stringify(payload));
+      const res = await ChatWithFile(payload);
+      const botMsg = {
+        sender: "bot",
+        text: res.answer,
+        query_type: res.query_type,
+        timestamp,
+      };
+      setChatMessages2((prev) => [...prev, botMsg]);
+      setLoadingBot(false);
     } catch (err) {
       setLoadingBot(false);
 
-      // WS failed → show error message
       setChatMessages2((prev) => [
         ...prev,
         {
@@ -245,7 +232,6 @@ const UserDashboard = () => {
       )
     );
   };
-
   const WhatsAppBubble = ({ msg }) => (
     <div
       className={`userdashboard-bubble ${
@@ -270,18 +256,9 @@ const UserDashboard = () => {
     setLeftSidebarOpen((prev) => !prev);
   };
 
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  console.log("history", history);
-
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        setLoading(true);
-
-        const data = await userChatHistory(user?.user_id);
-        setHistory(data);
       } catch (error) {
         console.error("Error fetching history:", error);
       } finally {
@@ -295,8 +272,7 @@ const UserDashboard = () => {
   }, [user?.user_id]);
   return (
     <div style={{ width: "100%" }}>
-      {/* right panel */}
-      <>
+      <div style={{ width: "100%" }}>
         <div
           className="back"
           id="toggleSidebar"
@@ -306,7 +282,7 @@ const UserDashboard = () => {
         </div>
 
         {resizableChange && (
-          <ResizableComponent>
+          <ResizableComponent extraStyles={{ top: "0px" }}>
             <div>
               <div className="sidebar " id="sidebar">
                 <div>
@@ -344,7 +320,6 @@ const UserDashboard = () => {
                         alignItems: "center",
                         gap: "8px",
                         background: "#fff",
-
                         borderRadius: "10px",
                       }}
                     >
@@ -421,16 +396,9 @@ const UserDashboard = () => {
             </div>
           </ResizableComponent>
         )}
-      </>
+      </div>
       {isloading && <Loading />}
 
-      {/* <div
-        className="back02"
-        // id="toggleSidebar"
-        // onClick={handleResizableChange}
-      >
-        <FaBars />
-      </div> */}
       <div className="content-wrapper">
         <div className="back02" onClick={toggleLeftSidebar}>
           {leftSidebarOpen ? <FaBars /> : <FaBars />}
@@ -438,101 +406,152 @@ const UserDashboard = () => {
 
         <div className={`left-panel ${leftSidebarOpen ? "open" : "closed"}`}>
           <h3 className="rp-title">Customer Details</h3>
-
           <div className="rp-card">
-            <p>
-              <strong>Name:</strong>{" "}
-              {staticData?.customer_details?.customer_name}
-            </p>
-            <p>
-              <strong>Email:</strong> {staticData?.customer_details?.email}
-            </p>
-            <p>
-              <strong>Account:</strong>{" "}
-              {staticData?.customer_details?.account_id}
-            </p>
+            <div className="customer-details">
+              <div className="detail-row">
+                <strong>Name:</strong>{" "}
+                <span>
+                  {staticData?.customer_details?.customer_name || "N/A"}
+                </span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Email:</strong>{" "}
+                <span>
+                  {staticData?.customer_details?.email
+                    ? staticData.customer_details.email.length > 20
+                      ? `${staticData.customer_details.email.slice(0, 20)}...`
+                      : staticData.customer_details.email
+                    : "N/A"}
+                </span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Account ID:</strong>{" "}
+                <span>{staticData?.customer_details?.account_id || "N/A"}</span>
+              </div>
+            </div>
           </div>
 
-          <h3 className="rp-title">History</h3>
-
-          <div className="rp-history">
-            {historyData.length === 0 ? (
-              <p className="no-history">No history found</p>
+          <h3 className="rp-title">Services</h3>
+          <div className="rp-card">
+            {staticData?.customer_details?.services?.length > 0 ? (
+              <ul className="service-list">
+                {staticData.customer_details.services.map((service, i) => (
+                  <li key={i}>• {service}</li>
+                ))}
+              </ul>
             ) : (
-              historyData.map((item) => (
-                <div key={item.fileId} className="rp-history-item">
-                  <div
-                    className="rp-history-header"
-                    onClick={() => toggleHistory(item.fileId)}
-                  >
-                    <span>{item.fileName}</span>
-                    <span>{item.isCollapsed ? "▼" : "▲"}</span>
-                  </div>
-
-                  {!item.isCollapsed && (
-                    <div className="rp-history-content">
-                      {item.details.map((d, i) => (
-                        <div key={i} className="rp-detail-block">
-                          <div className="rp-question">
-                            <p className="question-label">Question:</p>
-
-                            <div className="rp-detail-title">
-                              <ReactMarkdown>{d.title}</ReactMarkdown>
-                            </div>
-                          </div>
-
-                          <div className="rp-answer">
-                            <p className="question-label">Answer:</p>
-                            <div className="rp-detail-desc">
-                              <ReactMarkdown>{d.description}</ReactMarkdown>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
+              <p className="no-history">No services found</p>
             )}
           </div>
 
-          {/* TRANSACTIONS */}
-          <h3 className="rp-title">Transactions</h3>
-
-          <div className="rp-transactions">
-            {staticData?.customer_details?.transactions?.length > 0 ? (
-              staticData.customer_details.transactions.map((txn, i) => (
-                <div key={i} className="rp-transaction-card">
+          <h3 className="rp-title">Active Issues</h3>
+          <div className="rp-card">
+            {staticData?.customer_details?.issues?.length > 0 ? (
+              staticData.customer_details.issues.map((issue, i) => (
+                <div key={i} className="rp-issue-block">
                   <p>
-                    <strong>Date:</strong>{" "}
-                    {new Date(txn.date).toLocaleDateString()}
+                    <strong>Reason:</strong> {issue.reason}
                   </p>
                   <p>
-                    <strong>Type:</strong> {txn.type}
+                    <strong>Status:</strong>
+                    <span className={`{issue.status}`}>
+                      {issue.status.charAt(0).toUpperCase() +
+                        issue.status.slice(1)}
+                    </span>
                   </p>
                   <p>
-                    <strong>Amount:</strong> {txn.currency} {txn.amount}
+                    <strong>Start:</strong>{" "}
+                    {new Date(issue.startTime).toLocaleString()}
                   </p>
                   <p>
-                    <strong>Status:</strong> {txn.status}
-                  </p>
-                  {txn.notes && (
-                    <p>
-                      <strong>Notes:</strong> {txn.notes}
-                    </p>
-                  )}
-                  <p>
-                    <strong>Transaction ID:</strong> {txn.transactionId}
+                    <strong>End:</strong>{" "}
+                    {issue.endTime
+                      ? new Date(issue.endTime).toLocaleString()
+                      : "Ongoing"}
                   </p>
                 </div>
               ))
+            ) : (
+              <p className="no-history">No active issues</p>
+            )}
+          </div>
+
+          <h3 className="rp-title">Restrictions</h3>
+          <div className="rp-card">
+            {staticData?.customer_details?.restrictions?.length > 0 ? (
+              staticData.customer_details.restrictions.map((item, i) => (
+                <div key={i} className="rp-restriction-block">
+                  <p>
+                    <strong>Type:</strong> {item.type.replace(/_/g, " ")}
+                  </p>
+                  <p>
+                    <strong>Description:</strong> {item.description}
+                  </p>
+                  <p>
+                    <strong>Start Date:</strong>{" "}
+                    {new Date(item.startDate).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>End Date:</strong>{" "}
+                    {item.endDate
+                      ? new Date(item.endDate).toLocaleDateString()
+                      : "No end date"}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>
+                    <span
+                      className={` ${item.isActive ? "active" : "inactive"}`}
+                    >
+                      {item.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="no-history">No restrictions applied</p>
+            )}
+          </div>
+
+          <h3 className="rp-title">Recent Transactions</h3>
+          <div className="rp-transactions">
+            {staticData?.customer_details?.transactions?.length > 0 ? (
+              staticData.customer_details.transactions
+                .slice(0, 4)
+                .map((txn, i) => (
+                  <div key={i} className="rp-transaction-card">
+                    <p>
+                      <strong>Date:</strong>{" "}
+                      {new Date(txn.date).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <strong>Type:</strong>{" "}
+                      {txn.type.charAt(0).toUpperCase() + txn.type.slice(1)}
+                    </p>
+                    <p>
+                      <strong>Amount:</strong>{" "}
+                      <strong
+                        style={{
+                          color: "#000",
+                        }}
+                      >
+                        {txn.currency} {txn.amount.toFixed(2)}
+                      </strong>
+                    </p>
+                    {txn.notes && (
+                      <p className="txn-note">
+                        <em>{txn.notes}</em>
+                      </p>
+                    )}
+                  </div>
+                ))
             ) : (
               <p className="no-history">No transactions found</p>
             )}
           </div>
 
-          <h3 className="rp-title">Resolution Steps</h3>
-
+          <h3 className="rp-title">Standard Resolution Steps</h3>
           <ul className="rp-steps">
             {staticData?.customer_details?.resolution_steps?.map(
               (step, idx) => (
@@ -542,80 +561,18 @@ const UserDashboard = () => {
           </ul>
         </div>
 
-        {/* center panel */}
         <div
           className={`main ${sidebarHidden ? "fullwidth" : ""}`}
           id="main-content"
         >
           <h1>
             {" "}
-            <FaRobot className="me-2 " style={{ marginTop: "-10px" }} />
+            <FaRobot className="me-2 " style={{ marginTop: "10px" }} />
             Live Chat Assistant
           </h1>
 
           <div className="chatbot-container">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              {/* <div className="service-dropdown">
-                <div
-                  className="file-select-container"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "4px",
-                  }}
-                >
-                  <button
-                    className={`service-btn ${fileError ? "blink-border" : ""}`}
-                    onClick={() => setOpenDropdown(!openDropdown)}
-                    style={{
-                      border: fileError ? "2px solid red" : "1px solid #ccc",
-                    }}
-                  >
-                    <span className="service-btn-text">
-                      {FileItem.find((x) => x.file_id === selected)?.filename ||
-                        "Select File"}
-                    </span>
-                    <span className="dropdown-arrow">
-                      {openDropdown ? "▲" : "▼"}
-                    </span>
-                  </button>
-                </div>
-
-                <div className={`service-menu ${openDropdown ? "open" : ""}`}>
-                  {FileItem.length > 0 ? (
-                    FileItem.map((item) => (
-                      <div
-                        key={item.file_id}
-                        className={`service-item ${
-                          selected === item.file_id ? "selected" : ""
-                        }`}
-                        onClick={() => {
-                          setSelected(item.file_id);
-                          setOpenDropdown(false);
-                          setFileError(false);
-                          setChatMessages2([
-                            {
-                              sender: "bot",
-                              text: "Hello! How can I help you with the transcript?",
-                              timestamp: new Date().toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }),
-                            },
-                          ]);
-                        }}
-                      >
-                        {item.filename}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="service-item no-file">
-                      No file assigned for this user
-                    </div>
-                  )}
-                </div>
-              </div> */}
-            </div>
+            <div className="d-flex justify-content-between align-items-center mb-3"></div>
 
             <Header />
 
